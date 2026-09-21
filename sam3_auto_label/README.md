@@ -1,6 +1,8 @@
 # SAM 3.1 Auto-Labeling
 
-Module for automatic annotation using **SAM 3.1** (Segment Anything Model 3.1) for PPE images with 6 classes
+Module for automatic annotation using **SAM 3.1** (Segment Anything Model 3.1) for PPE images with 4 classes (v3 scheme)
+
+> **Class evolution**: v1 had 6 classes, v2 merged sandals → shoes (5 classes), v3 merged boots + shoes → "closed footwear" (4 classes — current). The config file is still named `ppe_6class.yaml` for historical reasons.
 
 Takes raw images from `../data/raw/` → detects via text prompt → exports to COCO/YOLO and 9 other formats → stores at `../data/sam_outputs_ground_truth/`
 
@@ -66,7 +68,7 @@ Or run via the main CLI: `../auto_label.sh --sam --batch <batch_name>`
 
 See `config/README.md` for details on each configuration file
 
-Main config: `config/ppe_6class.yaml` — defines 6 classes, threshold, resolution, output format, and paths
+Main config: `config/ppe_6class.yaml` — defines 4 classes (v3 scheme, despite the filename), threshold, resolution, output format, and paths
 
 ## Notes
 

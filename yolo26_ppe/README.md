@@ -1,8 +1,10 @@
 # YOLO26 PPE
 
-Training, evaluation, ONNX export, robustness testing, and reporting for five PPE classes:
+Training, evaluation, ONNX export, robustness testing, and reporting for four PPE classes (v3 scheme):
 
-`person`, `helmet`, `boots`, `shoes`, `harness`
+`person`, `helmet`, `closed footwear`, `harness`
+
+> **Class evolution**: v1 (6 classes) → v2 (5 classes, merged sandals) → v3 (4 classes, merged boots + shoes → "closed footwear" — current).
 
 ## Start here
 
@@ -27,6 +29,10 @@ Use only models under `models/production` for deployment, evaluation, export, or
 | `small_detection` | Highest-accuracy bounding-box detector | `models/production/small_detection/stage_2_final_fine_tuning/weights/best.pt` |
 | `nano_segmentation` | Smaller instance-segmentation model | `models/production/nano_segmentation/stage_2_final_fine_tuning/weights/best.pt` |
 | `small_segmentation` | Highest-accuracy instance-segmentation model | `models/production/small_segmentation/stage_2_final_fine_tuning/weights/best.pt` |
+| `medium_detection` | Medium bounding-box detector | ❌ No trained weights (defined in code only) |
+| `medium_segmentation` | Medium instance-segmentation model | ❌ No trained weights (defined in code only) |
+
+> **Note**: `pipeline_cli.py` and `02_train_models.py` define 6 models (including medium_detection and medium_segmentation), but only 4 (n/s detect + n/s seg) have trained production weights. Medium models are defined for future expansion.
 
 Each model has two training stages:
 
@@ -94,12 +100,13 @@ yolo26_ppe/
 
 | Directory | Meaning |
 |---|---|
-| `combined_coco_dataset_version_2` | Merged five-class COCO source dataset |
-| `yolo_detection_dataset_version_1` | Historical six-class detection dataset |
-| `yolo_detection_dataset_version_2` | Current five-class detection dataset |
-| `yolo_segmentation_dataset_version_1` | Historical six-class segmentation dataset |
-| `yolo_segmentation_dataset_version_2` | Current five-class segmentation dataset |
-| `dataset_analysis_reports` | Dataset distribution and integrity analysis |
+| `combined_coco_dataset_version_3` | Merged 4-class COCO source dataset (current) |
+| `yolo_detection_dataset_version_3` | Current 4-class detection dataset |
+| `yolo_segmentation_dataset_version_3` | Current 4-class segmentation dataset |
+| `predictions` | Inference results from production models |
+| `dataset_analysis_reports` | Dataset distribution and integrity analysis (historical) |
+
+> **Note**: v1 and v2 datasets have been removed from the repository. Only v3 (4 classes) is present. `production_train.yaml` still references v2 data paths — the training script uses `/tmp/` paths (copied from v3 at runtime).
 
 ## Historical model versions
 

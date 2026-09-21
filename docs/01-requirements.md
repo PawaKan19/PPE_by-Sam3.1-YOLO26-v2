@@ -113,7 +113,7 @@ any --> cpu : torch==2.5.1+cpu
 | ID | Requirement | Status |
 |----|---------|-------|
 | FR-01 | Run batch segmentation on an image folder | ✅ |
-| FR-02 | Support multi-class text prompts | ✅ (6 classes) |
+| FR-02 | Support multi-class text prompts | ✅ (4 classes — v3 scheme: person, helmet, closed footwear, harness) |
 | FR-03 | Generate bounding box + segmentation mask | ✅ |
 | FR-04 | Export to 11 formats | ✅ |
 | FR-05 | Checkpoint/resume | ✅ |
@@ -125,13 +125,13 @@ any --> cpu : torch==2.5.1+cpu
 
 | ID | Requirement | Status |
 |----|---------|-------|
-| FR-10 | Train 4 YOLO26 variants (n/s detect + n/s seg) | ✅ (300 epochs) |
-| FR-11 | Dataset preparation from ground truth | ✅ (v1, v2) |
+| FR-10 | Train 4 YOLO26 variants (n/s detect + n/s seg) | ✅ (2-stage: 150+50 epochs) |
+| FR-11 | Dataset preparation from ground truth | ✅ (v1→v2→v3) |
 | FR-12 | MLflow experiment tracking | ✅ |
 | FR-13 | Hyperparameter tuning | ✅ (3 trials × 4 models) |
 | FR-14 | ONNX export | ✅ |
 | FR-15 | Comparison report (PDF) | ✅ (`report.pdf`) |
-| FR-16 | Class balancing (oversampling) | ✅ (sandals, harness) |
+| FR-16 | Class balancing (oversampling) | ✅ (harness oversampled to 500 in v3) |
 
 ### RQ3 — Ground Truth Generation
 
@@ -139,8 +139,8 @@ any --> cpu : torch==2.5.1+cpu
 |----|---------|-------|
 | FR-20 | Generate ground truth from SAM 3.1 output | ✅ |
 | FR-21 | Human verification | ✅ (manual) |
-| FR-22 | Dataset versioning | ✅ (v1, v2 in `yolo26_ppe/data/`) |
-| FR-23 | Train/val/test split | ✅ (335/95/50) |
+| FR-22 | Dataset versioning | ✅ (v1→v2→v3 in `yolo26_ppe/data/`) |
+| FR-23 | Train/val/test split | ✅ (80/10/10) |
 
 ### Not Implemented
 
@@ -182,11 +182,14 @@ any --> cpu : torch==2.5.1+cpu
 |-----------|---------|
 | GPU | AMD RX 7800 XT (ROCm, WSL2) |
 | Framework | Ultralytics YOLO26 + PyTorch 2.5.1+rocm6.1 |
-| Epochs | 300 (detect), 150+50 (seg — 2 stage) |
-| Batch size | 8 (detect), 4 (seg) |
+| Epochs | 2-stage: Stage 1 = 150 (freeze=10), Stage 2 = 50 (unfreeze) |
+| Batch size | 64 (n detect), 48 (s detect), 16 (seg), 32 (m detect), 12 (m seg) |
 | Image size | 640 px |
-| Optimizer | SGD (lr0=0.01, lrf=0.01 cosine) |
-| Freeze | 10 (backbone frozen) |
+| Optimizer | SGD (Stage 1), AdamW (Stage 2) |
+| LR | Stage 1: lr0=0.01, Stage 2: lr0=0.001 |
+| Freeze | 10 (backbone frozen in Stage 1, unfrozen in Stage 2) |
+| NBS | 32 (gradient accumulation) |
+| Seed | 42 |
 
 > Source: `yolo26_ppe/reports/source/report.tex:652-677`
 

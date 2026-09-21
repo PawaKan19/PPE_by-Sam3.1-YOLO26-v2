@@ -122,20 +122,37 @@ DATASET --> [*]
 
 ## Dataset Versions
 
-### Version 1 (v1)
+> The class scheme evolved through 3 versions. The current production dataset is v3.
+
+### Version 1 (v1) — 6 classes
 
 - `yolo_detection_dataset_version_1/`
 - `yolo_segmentation_dataset_version_1/`
-- Used for the first training round
+- 6 classes: person, helmet, boots, shoes, sandals, harness
+- Used for the first training round (baseline)
 
-### Version 2 (v2)
+### Version 2 (v2) — 5 classes
 
 - `yolo_detection_dataset_version_2/`
 - `yolo_segmentation_dataset_version_2/`
 - `combined_coco_dataset_version_2/`
-- Improved split + class balancing
+- 5 classes: merged sandals → shoes (person, helmet, boots, shoes, harness)
+- Improved split + class balancing (sandals +30, harness +114)
+- Metrics from this version are in `comparison_report.md`
 
-> Source: `yolo26_ppe/data/` directory listing
+### Version 3 (v3, **current**) — 4 classes
+
+- `combined_coco_dataset_version_3/` (source COCO)
+- `yolo_detection_dataset_version_3/`
+- `yolo_segmentation_dataset_version_3/`
+- 4 classes: merged boots + shoes → "closed footwear" (person, helmet, closed footwear, harness)
+- 480 images, 80/10/10 split
+- Oversampling: harness → 500 (from 177)
+- Metrics from this version are in `final_eval_results.json` (v4_recipe)
+
+> Source: `yolo26_ppe/data/` directory listing, `yolo26_ppe/scripts/pipeline/01_prepare_dataset.py:11-13`
+>
+> **Note**: `production_train.yaml` still references v2 data paths, but the actual data directory only contains v3 datasets. The training script uses `/tmp/` paths (copied from v3 at runtime).
 
 ---
 

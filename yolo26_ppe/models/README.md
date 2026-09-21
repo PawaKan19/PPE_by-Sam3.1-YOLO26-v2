@@ -14,12 +14,14 @@ Do not use `models/archive/` unless you are reproducing an old experiment.
 
 | Model | Task | Recommended weight | mAP50 | mAP50-95 |
 |---|---|---|---:|---:|
-| `nano_detection` | Bounding-box detection | `production/nano_detection/stage_2_final_fine_tuning/weights/best.pt` | 0.585 | 0.428 |
-| `small_detection` | Bounding-box detection | `production/small_detection/stage_2_final_fine_tuning/weights/best.pt` | 0.738 | 0.574 |
-| `nano_segmentation` | Instance segmentation | `production/nano_segmentation/stage_2_final_fine_tuning/weights/best.pt` | 0.464 | 0.316 |
-| `small_segmentation` | Instance segmentation | `production/small_segmentation/stage_2_final_fine_tuning/weights/best.pt` | 0.537 | 0.386 |
+| `nano_detection` | Bounding-box detection | `production/nano_detection/stage_2_final_fine_tuning/weights/best.pt` | 0.712 | 0.514 |
+| `small_detection` | Bounding-box detection | `production/small_detection/stage_2_final_fine_tuning/weights/best.pt` | 0.808 | 0.644 |
+| `nano_segmentation` | Instance segmentation (B) | `production/nano_segmentation/stage_2_final_fine_tuning/weights/best.pt` | 0.547 | 0.365 |
+| `small_segmentation` | Instance segmentation (B) | `production/small_segmentation/stage_2_final_fine_tuning/weights/best.pt` | 0.654 | 0.485 |
 
-Metrics source: `../artifacts/evaluation/yolo/production_v4_recipe/all_metrics.json`.
+Metrics source: [`../reports/inputs/final_eval_results.json`](../reports/inputs/final_eval_results.json) (canonical — v4_recipe).
+
+> **Note**: `../artifacts/evaluation/yolo/production_v4_recipe/all_metrics.json` contains metrics for medium + small models only (no nano), with v3 class names. `final_eval_results.json` contains all 4 production models but uses v2 class names (5 classes). The values above are from `final_eval_results.json` and are the canonical metrics referenced by the root README.
 
 ## Model selection
 

@@ -6,7 +6,7 @@ YAML configs for training, augmentation, and MLflow.
 
 | File | Purpose |
 | ---- | ------- |
-| `production_train.yaml` | Main config — epochs, lr, optimizer, loss weights, 4 models |
+| `production_train.yaml` | Main config — epochs, lr, optimizer, loss weights, 6 models defined (4 trained) |
 | `production_augmentation.yaml` | Augmentation recipe (HSV, mosaic, mixup, erasing) |
 | `mlflow.yaml` | MLflow tracking server config |
 
@@ -31,13 +31,17 @@ fl_gamma: 1.5        # Helps with class imbalance + hard examples
 # Gradient accumulation
 nbs: 64              # Effective batch = 64 (batch=16 → 4x accumulation)
 
-# 4 models
+# 4 models (trained) + 2 medium models (defined only, no weights)
 models:
   nano_detection:    yolo26n.pt, detect
   small_detection:   yolo26s.pt, detect
   nano_segmentation: yolo26n-seg.pt, segment
   small_segmentation: yolo26s-seg.pt, segment
+  medium_detection:  yolo26m.pt, detect      # defined only
+  medium_segmentation: yolo26m-seg.pt, segment # defined only
 ```
+
+> **Note**: `production_train.yaml` still references v2 data paths (`yolo_detection_dataset_version_2/data.yaml`), but the actual data directory only contains v3 datasets. The training script `02_train_models.py` uses `/tmp/` paths (copied from v3 at runtime).
 
 ## production_augmentation.yaml
 

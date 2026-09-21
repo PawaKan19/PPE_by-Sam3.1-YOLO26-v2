@@ -89,7 +89,7 @@ EVAL --> REPORT : comparison
 ## Input
 
 - **RQ1/RQ3**: Raw image folder (`data/raw/`) supporting `.jpg`, `.jpeg`, `.png`, `.bmp`, `.webp`, `.tiff`, `.tif` (case-insensitive)
-- **RQ2**: PPE dataset generated from RQ1 (913 images, 5 classes — after human verification)
+- **RQ2**: PPE dataset generated from RQ1 (480 images, 4 classes — v3 dataset after human verification)
 
 ## Output
 
@@ -103,20 +103,23 @@ EVAL --> REPORT : comparison
 
 ---
 
-## Supported Classes (6 PPE Classes)
+## Supported Classes (4 PPE Classes)
 
-| ID | Name | Text Prompt | Per-class Threshold | Used in YOLO26 |
-|----|------|-------------|---------------------|--------------|
+> **Evolution**: The class scheme evolved through 3 versions:
+> - **v1** (6 classes): person, helmet, boots, shoes, sandals, harness
+> - **v2** (5 classes): merged sandals → shoes (person, helmet, boots, shoes, harness)
+> - **v3** (4 classes, **current**): merged boots + shoes → "closed footwear" (person, helmet, closed footwear, harness)
+>
+> The config file is still named `ppe_6class.yaml` for historical reasons but contains 4 classes.
+
+| ID | Name | Text Prompt | Per-class Threshold | Used in YOLO26 v3 |
+|----|------|-------------|---------------------|-------------------|
 | 1 | `person` | `person` | 0.7 | ✅ |
 | 2 | `helmet` | `helmet` | 0.25 | ✅ |
-| 3 | `boots` | `boots` | 0.25 | ✅ |
-| 4 | `shoes` | `shoes` | 0.25 | ✅ |
-| 5 | `sandals` | `flip-flops` | 0.3 | ✅ |
-| 6 | `harness` | `safety harness` | 0.25 | ✅ |
+| 3 | `closed footwear` | `closed footwear` | 0.25 | ✅ |
+| 4 | `harness` | `safety harness` | 0.25 | ✅ |
 
-> Source: `sam3_auto_label/config/ppe_6class.yaml`
->
-> **Note**: YOLO26 is trained on 5 classes (person, helmet, boots, shoes, harness) — sandals had only 4 images in the original set, so it was oversampled but still achieved mAP50 = 0
+> Source: `sam3_auto_label/config/ppe_6class.yaml` (4 classes, despite the filename), `pipeline_cli.py:166`, `yolo26_ppe/scripts/pipeline/01_prepare_dataset.py:32`
 
 ---
 
@@ -168,22 +171,28 @@ stop
 
 ## YOLO26 Training Results (RQ2)
 
-> Source: `yolo26_ppe/reports/inputs/final_eval_results.json` and `yolo26_ppe/reports/metrics/comparison_report.md`
+> Source: `yolo26_ppe/reports/inputs/final_eval_results.json` (v4_recipe — final production metrics)
+>
+> **Note**: The per-class metrics in `final_eval_results.json` use v2 class names (person, helmet, boots, shoes, harness) — 5 classes. The current codebase has evolved to v3 (4 classes: person, helmet, closed footwear, harness). The overall metrics below are from the v4_recipe training run and are the canonical values referenced by the README.
 
-| Model | Task | mAP50 | mAP50-95 | Precision | Recall | Inference (ms) | Size (MB) |
-|-------|------|-------|----------|-----------|--------|----------------|-----------|
-| YOLO26n | detect | 0.712 | 0.514 | 0.777 | 0.665 | 33.0 | 10.0 |
-| YOLO26s | detect | **0.808** | **0.644** | **0.862** | **0.758** | 31.3 | 38.3 |
-| YOLO26n-seg | segment | 0.547 | 0.365 | 0.720 | 0.522 | 33.8 | 11.3 |
-| YOLO26s-seg | segment | 0.654 | 0.485 | 0.824 | 0.606 | 30.8 | 42.0 |
-| SAM 3.1 | segment | N/A | N/A | N/A | N/A | 700.0 | 3300.0 |
+| Model | Task | mAP50 | mAP50-95 | Precision | Recall |
+|-------|------|-------|----------|-----------|--------|
+| YOLO26n | detect | 0.712 | 0.514 | 0.777 | 0.665 |
+| **YOLO26s** | **detect** | **0.808** | **0.644** | **0.862** | **0.758** |
+| YOLO26n-seg | segment (B) | 0.547 | 0.365 | 0.720 | 0.522 |
+| YOLO26n-seg | segment (M) | 0.491 | 0.277 | 0.659 | 0.466 |
+| YOLO26s-seg | segment (B) | 0.654 | 0.485 | 0.824 | 0.606 |
+| YOLO26s-seg | segment (M) | 0.555 | 0.340 | 0.758 | 0.524 |
+| SAM 3.1 | segment | N/A | N/A | N/A | N/A |
+
+> **Note**: `pipeline_cli.py` and `02_train_models.py` define 6 models (including medium_detection and medium_segmentation), but only 4 (n/s detect + n/s seg) have trained production weights. Medium models are defined for future expansion.
 
 ### Conclusions
 
 - **Best overall**: YOLO26s detect (mAP50=0.808) — most accurate, 100x faster than SAM 3.1
 - **Best edge**: YOLO26n detect — smallest (10 MB), suitable for edge deployment
 - **Best zero-shot**: SAM 3.1 — no training required, supports all classes via text prompt
-- **Target mAP50 ≥ 0.85**: Not achieved — main reasons are dataset size + class imbalance (sandals 4 images, harness 102 images)
+- **Target mAP50 >= 0.85**: Not achieved — main reasons are dataset size + class imbalance (harness 177 annotations in v3, 19:1 imbalance vs closed footwear)
 
 ---
 
@@ -209,16 +218,16 @@ stop
 ## In Scope
 
 - ✅ **RQ1**: Automatic batch segmentation with SAM 3.1 text prompt
-- ✅ **RQ1**: 6 PPE classes with per-class threshold
+- ✅ **RQ1**: 4 PPE classes with per-class threshold (v3 scheme: person, helmet, closed footwear, harness)
 - ✅ **RQ1**: 11 export formats (COCO, YOLO, VOC, LabelMe, CVAT, Label Studio, KITTI, CreateML, OpenImages, Supervisely, masks)
 - ✅ **RQ1**: Checkpoint/resume + experiment tracking (SQLite)
-- ✅ **RQ2**: Train 4 YOLO26 variants (300 epochs, SGD, imgsz=640)
+- ✅ **RQ2**: Train 4 YOLO26 variants (2-stage: 150+50 epochs, SGD→AdamW, imgsz=640)
 - ✅ **RQ2**: MLflow experiment tracking for YOLO26
 - ✅ **RQ2**: Hyperparameter tuning (3 trials × 4 models)
 - ✅ **RQ2**: ONNX export + inference benchmark
 - ✅ **RQ2**: Full comparison report (`report.pdf`)
 - ✅ **RQ3**: Generate ground truth from SAM 3.1 output
-- ✅ **RQ3**: Dataset versioning (v1, v2) in `yolo26_ppe/data/`
+- ✅ **RQ3**: Dataset versioning (v1→v2→v3) in `yolo26_ppe/data/`
 
 ## Out of Scope
 

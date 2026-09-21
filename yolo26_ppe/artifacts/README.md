@@ -51,6 +51,8 @@ See config: `../configs/mlflow.yaml`
 
 ONNX exports of the 4 production models, used for deployment.
 
+> **Note**: `pipeline_cli.py` and `02_train_models.py` define 6 models (including `medium_detection` and `medium_segmentation`), but only 4 (n/s detect + n/s seg) have trained production weights and ONNX exports. The medium models have evaluation metrics in `all_metrics.json` but no trained weights or ONNX exports in the repository.
+
 ## onnx_inference_results/blur_robustness/
 
 ONNX inference results on blurred images, per model:

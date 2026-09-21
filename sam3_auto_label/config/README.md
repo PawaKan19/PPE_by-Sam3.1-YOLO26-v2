@@ -6,7 +6,10 @@ Config files for defining classes, thresholds, inference, annotation, and output
 
 | File | Number of classes | When to use |
 |------|-----------|----------|
-| `ppe_6class.yaml` | 6 | default config — used with the main pipeline |
+| `ppe_6class.yaml` | 4 (v3 scheme) | default config — used with the main pipeline |
+| `ppe_4class.yaml` | 4 (v3 scheme) | same as ppe_6class.yaml — kept for compatibility |
+
+> **Note**: `ppe_6class.yaml` is named for historical reasons (originally had 6 classes) but now contains 4 classes (v3 scheme: person, helmet, closed footwear, harness). The class scheme evolved: v1 (6 classes) → v2 (5 classes, merged sandals) → v3 (4 classes, merged boots+shoes → "closed footwear").
 
 ## ppe_6class.yaml Structure
 
@@ -38,16 +41,22 @@ Key validation rules:
 - `device` must be `auto`, `cpu`, `cuda`, `rocm`, or `mps`
 - `viz_figsize` must have 2 positive numeric values
 
-## All Classes (6 classes)
+## Current Classes (4 classes — v3 scheme)
 
 | id | name | prompt | threshold | Description |
 |----|------|--------|-----------|----------|
 | 1 | person | person | 0.7 | Person |
 | 2 | helmet | helmet | 0.25 | Safety helmet |
-| 3 | boots | boots | 0.25 | Safety boots/rubber boots |
-| 4 | shoes | shoes | 0.25 | Canvas shoes/covered-heel shoes |
-| 5 | sandals | flip-flops | 0.3 | Sandals/flip-flops |
-| 6 | harness | safety harness | 0.25 | Safety harness/lanyard |
+| 3 | closed footwear | closed footwear | 0.25 | Safety boots / closed-toe shoes (merged from boots + shoes) |
+| 4 | harness | safety harness | 0.25 | Safety harness / full-body harness |
+
+### Historical Class Evolution
+
+| Version | Classes | Change |
+|---------|--------|--------|
+| v1 | 6 | person, helmet, boots, shoes, sandals, harness |
+| v2 | 5 | merged sandals → shoes |
+| v3 (current) | 4 | merged boots + shoes → "closed footwear" |
 
 ## threshold
 
@@ -59,7 +68,7 @@ person uses 0.7 because it is abundant and clearly visible, while other classes 
 
 ## path
 
-Paths in config are **absolute paths for WSL2**:
+> **Warning**: Paths in config are **absolute paths hardcoded for WSL2** (`/mnt/e/02_Projects/auto_label/...`). These must be overridden at runtime when running on a different machine.
 
 ```yaml
 input_dir: /mnt/e/02_Projects/auto_label/data/raw

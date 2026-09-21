@@ -26,7 +26,7 @@ This repository covers the full workflow from **raw image → auto-label → ver
 
 | Capability | Implementation | Status |
 |---|---|---|
-| SAM auto-labeling | Text-prompted segmentation for 6 PPE classes | Implemented |
+| SAM auto-labeling | Text-prompted segmentation for 4 PPE classes (v3 scheme) | Implemented |
 | Annotation output | Bounding boxes, masks, visualization, and 11 export formats | Implemented |
 | Recovery | Atomic checkpoint writes and configurable resume policy | Implemented |
 | SAM experiment tracking | SQLite run, image, and metric records | Implemented |
@@ -87,18 +87,24 @@ SAM 3.1 benchmark evidence is stored in [`sam3_benchmark_results.json`](yolo26_p
 
 ## Supported PPE classes
 
-SAM auto-labeling uses 6 prompt classes. YOLO dataset v2 uses 5 classes by merging `sandals` into `shoes`.
+> **Evolution**: The class scheme evolved through 3 versions. The current production dataset is v3.
+>
+> - **v1** (6 classes): person, helmet, boots, shoes, sandals, harness
+> - **v2** (5 classes): merged sandals → shoes
+> - **v3** (4 classes, **current**): merged boots + shoes → "closed footwear"
 
-| SAM ID | SAM class | Text prompt | Threshold | YOLO v2 class |
+SAM auto-labeling uses 4 prompt classes (v3 scheme). The config file is still named `ppe_6class.yaml` for historical reasons but contains 4 classes.
+
+| SAM ID | SAM class | Text prompt | Threshold | YOLO v3 class |
 |---:|---|---|---:|---|
 | 1 | `person` | `person` | 0.70 | `person` |
 | 2 | `helmet` | `helmet` | 0.25 | `helmet` |
-| 3 | `boots` | `boots` | 0.25 | `boots` |
-| 4 | `shoes` | `shoes` | 0.25 | `shoes` |
-| 5 | `sandals` | `flip-flops` | 0.30 | merged into `shoes` |
-| 6 | `harness` | `safety harness` | 0.25 | `harness` |
+| 3 | `closed footwear` | `closed footwear` | 0.25 | `closed footwear` |
+| 4 | `harness` | `safety harness` | 0.25 | `harness` |
 
-Sources: [`ppe_6class.yaml`](sam3_auto_label/config/ppe_6class.yaml) and YOLO v2 [`data.yaml`](yolo26_ppe/data/yolo_detection_dataset_version_2/data.yaml).
+Sources: [`ppe_6class.yaml`](sam3_auto_label/config/ppe_6class.yaml) (4 classes despite the filename), [`pipeline_cli.py`](pipeline_cli.py), [`01_prepare_dataset.py`](yolo26_ppe/scripts/pipeline/01_prepare_dataset.py).
+
+> **Note**: `final_eval_results.json` still uses v2 class names (5 classes: person, helmet, boots, shoes, harness) because the evaluation was run on v2 datasets. The current codebase has evolved to v3 (4 classes). See [Known limitations](#known-limitations-and-operational-risks).
 
 ## Repository structure
 

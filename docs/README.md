@@ -11,6 +11,8 @@ status: "Verified"
 >
 > Covers 3 requirements: (1) SAM 3.1 auto-labeling, (2) YOLO26 training, (3) ground-truth generation
 >
+> **Current dataset version**: v3 (4 classes: person, helmet, closed footwear, harness)
+>
 > Built with **Markdown Preview Enhanced (MPE)** — open the file in VS Code and press `Ctrl+Shift+V` to preview
 >
 > Uses PlantUML (requires Java), GraphViz (Viz.js bundled with MPE), KaTeX math, MPE `@import`
@@ -159,11 +161,11 @@ The documentation clearly indicates which parts are commonly found in general sy
 | `sam3_auto_label/src/batch_segment.py` | Batch loop + checkpoint + ETA |
 | `sam3_auto_label/src/exporters.py` | 11 export formats |
 | `sam3_auto_label/src/tracker.py` | SQLite experiment tracking |
-| `sam3_auto_label/config/ppe_6class.yaml` | Actual config (6 classes) |
-| `pipeline_cli.py` | Root CLI — 3 modes (sam/yolo/pred) |
-| `yolo26_ppe/configs/production_train.yaml` | YOLO26 training config |
+| `sam3_auto_label/config/ppe_6class.yaml` | Actual config (4 classes — v3 scheme, despite filename) |
+| `pipeline_cli.py` | Root CLI — 3 modes (sam/yolo/pred), 6 models defined (4 trained) |
+| `yolo26_ppe/configs/production_train.yaml` | YOLO26 training config (references v2 data paths) |
 | `yolo26_ppe/configs/production_augmentation.yaml` | YOLO26 augmentation config |
 | `yolo26_ppe/configs/mlflow.yaml` | MLflow config |
 | `yolo26_ppe/reports/final/report.pdf` | Full report |
-| `yolo26_ppe/reports/inputs/final_eval_results.json` | YOLO26 metrics |
-| `yolo26_ppe/reports/metrics/comparison_report.md` | Comparison summary |
+| `yolo26_ppe/reports/inputs/final_eval_results.json` | YOLO26 metrics (v4_recipe — canonical) |
+| `yolo26_ppe/reports/metrics/comparison_report.md` | Comparison summary (v2 era — stale) |
