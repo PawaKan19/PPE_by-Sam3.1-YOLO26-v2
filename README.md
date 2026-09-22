@@ -279,27 +279,54 @@ An image is committed as successfully processed only after its configured per-im
 
 Run checks from the repository root.
 
-### SAM-focused regression suite
+### Test structure
 
-```bash
-python -m pytest \
-  tests/test_sam_config.py \
-  tests/test_sam_inference.py \
-  tests/test_sam_batch_segment.py \
-  -q
+```text
+tests/
+├── unit/                       # Pure-function tests (no GPU, no network)
+│   ├── test_config_static.py      # Config file + checkpoint path validation
+│   ├── test_dataset_prep.py       # Dataset preparation (COCO→YOLO, split, oversampling)
+│   ├── test_focal_patch.py        # Focal Loss monkey-patch verification
+│   ├── test_path_safety.py        # Path traversal prevention in CLI
+│   ├── test_provenance.py         # Annotation provenance, label validator, retry, min_area
+│   └── test_security_static.py    # Static security scans (no secrets, no shell=True)
+└── integration/                # End-to-end tests (require GPU, checkpoint, or trained models)
+    ├── test_sam_batch.py          # SAM batch segmentation + checkpoint/resume
+    └── test_yolo_training.py      # YOLO26 training + ONNX export
 ```
 
-These tests avoid loading the real SAM checkpoint or requiring a GPU.
-
-### Root CLI tests
+### Unit tests (fast gate — no GPU required)
 
 ```bash
-python -m pytest tests -q
+python -m pytest tests/unit -q
 ```
 
-This suite requires the root CLI dependencies, including `questionary` and `rich`. Project-wide unrestricted pytest discovery may also collect vendored SAM tests and traverse dataset links; prefer explicit repository-owned test paths in automation.
+> **Latest result (Windows, Python 3.10, minimal deps)**: 33 passed, 16 failed, 13 errors
+>
+> | Test file | Pass | Fail | Error | Note |
+> |-----------|-----:|-----:|------:|------|
+> | `test_config_static.py` | 0 | 0 | 1 | Requires `pycocotools` |
+> | `test_dataset_prep.py` | 14 | 2 | 0 | 2 stale tests expect v2 (5 classes) but code is v3 (4 classes) |
+> | `test_focal_patch.py` | 0 | 2 | 0 | Requires `ultralytics` |
+> | `test_path_safety.py` | 0 | 0 | 12 | Requires `questionary` |
+> | `test_provenance.py` | 4 | 12 | 0 | Requires `pycocotools` (imports `inference.py`) |
+> | `test_security_static.py` | 4 | 0 | 0 | ✅ All pass |
+>
+> **Failure breakdown:**
+> - **25 tests blocked by missing deps**: `pycocotools` (13), `questionary` (12), `ultralytics` (2)
+> - **2 stale tests** (`test_dataset_prep.py`): expect v2 oversampling (boots + harness) and 5-class mapping, but v3 code has 4 classes with only harness oversampled — tests need updating for v3
+>
+> **On WSL2 with full deps installed** (per `sam3_auto_label/requirements.txt` + `yolo26_ppe/requirements.txt`): the historical baseline was 75 passed, 1 skipped (TC-01 SAM batch skipped on Windows). The current v3 codebase has 2 stale tests that need updating before the suite can pass cleanly.
 
-### Static checks used for the SAM source
+### Integration tests (require GPU + checkpoint + trained models)
+
+```bash
+python -m pytest tests/integration -q
+```
+
+These tests require the SAM 3.1 checkpoint (~3.34 GB), a GPU (CUDA/ROCm/MPS), and/or trained YOLO26 models. TC-01 (SAM batch on single image) is deterministically skipped on Windows because the `sam3` vendored module is not importable outside WSL2/Linux.
+
+### Static checks
 
 ```bash
 python -m ruff check sam3_auto_label/src tests
@@ -308,6 +335,16 @@ python -m mypy \
   sam3_auto_label/src/batch_segment.py \
   --ignore-missing-imports
 python -m compileall -q sam3_auto_label/src
+```
+
+### Test dependencies
+
+Install test dependencies before running the suite:
+
+```bash
+pip install pytest pyyaml numpy pycocotools questionary rich
+# For focal_patch tests:
+pip install ultralytics
 ```
 
 Tests that require large model files, external services, MLflow, datasets, or a GPU should be isolated and documented as integration tests rather than included in the fast unit-test gate.
@@ -326,6 +363,8 @@ Tests that require large model files, external services, MLflow, datasets, or a 
 | Observability | Local logs and SQLite tracking only | No centralized metrics, tracing, alerting, or log aggregation |
 | Visualization | Overlay colors use a hard-coded category-ID palette that is stale for several configured classes | Treat text labels as authoritative and correct the palette before using color as a review signal |
 | Model quality | Best reported box mAP50 is `0.808`, below the `0.85` target | Additional representative data and label-quality work are required |
+| Test suite | 2 tests in `test_dataset_prep.py` still expect v2 (5 classes) but code is v3 (4 classes) | Tests need updating for v3 oversampling targets and class mapping |
+| Test deps | Unit tests require `pycocotools`, `questionary`, `rich`, `ultralytics` which are not in a consolidated test requirements file | Install explicitly before running the suite |
 | Licensing | No top-level license file is present | Redistribution and external use rights are not established by this repository |
 
 Do not describe this repository as fully production-ready until environment portability, dependency packaging, checkpoint deployment, failure recovery, model acceptance criteria, monitoring, and licensing are resolved for the target deployment.
